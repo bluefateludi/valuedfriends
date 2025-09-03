@@ -171,9 +171,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public boolean isAdmin(User user) {
-        // 将Integer类型的userRole转换为String类型进行比较
-        String userRoleStr = user != null && user.getUserRole() != null ? user.getUserRole().toString() : null;
-        return user != null && UserRoleEnum.ADMIN.getValue().equals(userRoleStr);
+        // 根据数据库设计，管理员的userRole为1
+        return user != null && user.getUserRole() != null && user.getUserRole() == 1;
     }
 
     /**
@@ -226,7 +225,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String unionId = userQueryRequest.getUnionId();
         String mpOpenId = userQueryRequest.getMpOpenId();
         String userName = userQueryRequest.getUserName();
-        String userProfile = userQueryRequest.getUserProfile();
         String userRole = userQueryRequest.getUserRole();
         String sortField = userQueryRequest.getSortField();
         String sortOrder = userQueryRequest.getSortOrder();
@@ -235,7 +233,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq(StringUtils.isNotBlank(unionId), "unionId", unionId);
         queryWrapper.eq(StringUtils.isNotBlank(mpOpenId), "mpOpenId", mpOpenId);
         queryWrapper.eq(StringUtils.isNotBlank(userRole), "userRole", userRole);
-        queryWrapper.like(StringUtils.isNotBlank(userProfile), "userProfile", userProfile);
         queryWrapper.like(StringUtils.isNotBlank(userName), "username", userName);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
@@ -247,11 +244,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserVO convertUserToVO(User user) {
         UserVO userVO = new UserVO();
         userVO.setId(user.getId());
-        userVO.setUsername(user.getUsername()); // 字段名转换
-        userVO.setAvatarUrl(user.getAvatarUrl()); // 字段名转换
-
-        userVO.setUserProfile(user.getUserProfile());
-        userVO.setUserRole(user.getUserRole().toString()); // 转换为字符串
+        userVO.setUsername(user.getUsername());
+        userVO.setAvatarUrl(user.getAvatarUrl());
+        userVO.setUserRole(user.getUserRole());
         userVO.setCreateTime(user.getCreateTime());
         return userVO;
     }
