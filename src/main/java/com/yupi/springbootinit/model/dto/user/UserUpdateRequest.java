@@ -17,9 +17,14 @@ public class UserUpdateRequest implements Serializable {
     private Long id;
 
     /**
+     * 用户账号
+     */
+    private String userAccount;
+
+    /**
      * 用户昵称
      */
-    private String userName;
+    private String username;
 
     /**
      * 用户头像
@@ -27,7 +32,37 @@ public class UserUpdateRequest implements Serializable {
     private String avatarUrl;
 
     /**
-     * 用户角色：user/admin/ban
+     * 性别
+     */
+    private Integer gender;
+
+    /**
+     * 电话
+     */
+    private String phone;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 用户状态 0-正常
+     */
+    private Integer userStatus;
+
+    /**
+     * 星球编号
+     */
+    private String planetCode;
+
+    /**
+     * 标签json列表
+     */
+    private String tags;
+
+    /**
+     * 用户角色：0-普通用户 1-管理员
      */
     private Integer userRole;
 
