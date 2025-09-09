@@ -6,7 +6,7 @@
 
 ### 1.1 基础信息
 
-- **基础URL**: `http://localhost:8101/api`
+- **基础URL**: `http://localhost:8081`
 - **数据格式**: JSON
 - **字符编码**: UTF-8
 - **认证方式**: Session 认证

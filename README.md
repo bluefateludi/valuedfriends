@@ -1,11 +1,11 @@
-# SpringBoot 项目初始模板
+# ValuedFriends - 基于标签的智能推荐系统
 
 > 作者：[程序员鱼皮](https://github.com/liyupi)
 > 仅分享于 [编程导航知识星球](https://yupi.icu)
 
-基于 Java SpringBoot 的项目初始模板，整合了常用框架和主流业务的示例代码。
+基于 Java SpringBoot 的智能推荐系统，整合了常用框架和主流业务的示例代码。
 
-只需 1 分钟即可完成内容网站的后端！！！大家还可以在此基础上快速开发自己的项目。
+专注于基于用户标签的好友推荐和商品推荐功能，帮助用户发现志同道合的朋友和感兴趣的商品。
 
 [toc]
 
@@ -52,12 +52,18 @@
 
 ## 业务功能
 
-- 提供示例 SQL（用户、帖子、帖子点赞、帖子收藏表）
+- 提供示例 SQL（用户、用户标签、商品、推荐记录表）
 - 用户登录、注册、注销、更新、检索、权限管理
-- 帖子创建、删除、编辑、更新、数据库检索、ES 灵活检索
-- 帖子点赞、取消点赞
-- 帖子收藏、取消收藏、检索已收藏帖子
-- 帖子全量同步 ES、增量同步 ES 定时任务
+- 用户标签管理：标签创建、编辑、删除、分类管理
+- 基于用户标签的好友推荐系统：
+  - 智能匹配算法，根据用户兴趣标签推荐相似用户
+  - 推荐结果排序和过滤
+  - 好友申请和管理功能
+- 基于用户标签的商品推荐功能：
+  - 个性化商品推荐算法
+  - 商品标签体系管理
+  - 推荐历史记录和反馈机制
+- 推荐算法优化：协同过滤、内容过滤、混合推荐
 - 支持微信开放平台登录
 - 支持微信公众号订阅、收发消息、设置菜单
 - 支持分业务的文件上传
@@ -89,7 +95,7 @@ spring:
     password: 123456
 ```
 
-2）执行 `sql/create_table.sql` 中的数据库语句，自动创建库表
+2）执行 `sql/create_table.sql` 中的数据库语句，自动创建库表（包含用户表、用户标签表、商品表、推荐记录表等）
 
 3）启动项目，访问 `http://localhost:8101/api/doc.html` 即可打开接口文档，不需要写前端就能在线调试接口了~
 
@@ -132,35 +138,31 @@ spring:
 @SpringBootApplication
 ```
 
-### Elasticsearch 搜索引擎
+### 推荐系统配置
 
-1）修改 `application.yml` 的 Elasticsearch 配置为你自己的：
+1）配置推荐算法参数，修改 `application.yml`：
 
 ```yml
-spring:
-  elasticsearch:
-    uris: http://localhost:9200
-    username: root
-    password: 123456
+recommendation:
+  friend:
+    similarity-threshold: 0.6
+    max-recommendations: 20
+  product:
+    algorithm: hybrid
+    weight-collaborative: 0.6
+    weight-content: 0.4
 ```
 
-2）复制 `sql/post_es_mapping.json` 文件中的内容，通过调用 Elasticsearch 的接口或者 Kibana Dev Tools 来创建索引（相当于数据库建表）
+2）初始化推荐系统数据
 
-```
-PUT post_v1
-{
- 参数见 sql/post_es_mapping.json 文件
-}
-```
+执行 `sql/insert_test_data.sql` 中的测试数据，包含用户标签和商品标签的示例数据。
 
-这步不会操作的话需要补充下 Elasticsearch 的知识，或者自行百度一下~
+3）开启推荐任务
 
-3）开启同步任务，将数据库的帖子同步到 Elasticsearch
-
-找到 job 目录下的 `FullSyncPostToEs` 和 `IncSyncPostToEs` 文件，取消掉 `@Component` 注解的注释，再次执行程序即可触发同步：
+找到 job 目录下的推荐任务文件，取消掉 `@Component` 注解的注释：
 
 ```java
-// todo 取消注释开启任务
+// todo 取消注释开启推荐任务
 //@Component
 ```
 
@@ -172,10 +174,10 @@ PUT post_v1
 
 ```
 // 指定生成参数
-String packageName = "com.yupi.springbootinit";
-String dataName = "用户评论";
-String dataKey = "userComment";
-String upperDataKey = "UserComment";
+String packageName = "com.yupi.valuedfriends";
+String dataName = "用户标签";
+String dataKey = "userTag";
+String upperDataKey = "UserTag";
 ```
 
 生成代码后，可以移动到实际项目中，并且按照 `// todo` 注释的提示来针对自己的业务需求进行修改。
