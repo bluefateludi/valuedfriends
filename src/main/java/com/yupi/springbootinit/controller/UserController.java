@@ -20,11 +20,15 @@ import com.yupi.springbootinit.model.entity.User;
 import com.yupi.springbootinit.model.vo.LoginUserVO;
 import com.yupi.springbootinit.model.vo.UserVO;
 import com.yupi.springbootinit.service.UserService;
+import com.yupi.springbootinit.service.MatchService;
+import com.yupi.springbootinit.model.vo.BatchMatchRequest;
+import com.yupi.springbootinit.model.vo.BatchMatchResponse;
 
 import java.util.List;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import lombok.extern.slf4j.Slf4j;
 // 移除未使用的微信相关导入
@@ -53,6 +57,9 @@ public class UserController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private MatchService matchService;
 
     // region 登录相关
 
@@ -436,6 +443,34 @@ public class UserController {
         List<UserVO> userVO = userService.getUserVO(userPage.getRecords());
         userVOPage.setRecords(userVO);
         return ResultUtils.success(userVOPage);
+    }
+
+    // endregion
+
+    // region 匹配相关
+
+    /**
+     * 分批匹配用户
+     * 
+     * @param batchMatchRequest 分批匹配请求参数
+     * @param request           HTTP请求对象，用于获取当前登录用户
+     * @return 匹配结果列表
+     * @throws BusinessException 当参数无效或用户未登录时抛出
+     */
+    @PostMapping("/match/batch")
+    public BaseResponse<BatchMatchResponse> batchMatchUsers(@Valid @RequestBody BatchMatchRequest batchMatchRequest,
+            HttpServletRequest request) {
+        if (batchMatchRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数不能为空");
+        }
+        
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        
+        // 调用匹配服务
+        BatchMatchResponse response = matchService.batchMatchUsers(batchMatchRequest, loginUser);
+        
+        return ResultUtils.success(response);
     }
 
     // endregion

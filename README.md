@@ -1,5 +1,6 @@
 # ValuedFriends - 基于标签的智能推荐系统
-
+//常用网址
+`http://localhost:8101/api/doc.html
 > 作者：[程序员鱼皮](https://github.com/liyupi)
 > 仅分享于 [编程导航知识星球](https://yupi.icu)
 

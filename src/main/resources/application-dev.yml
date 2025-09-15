@@ -1,0 +1,39 @@
+# 开发环境配置文件
+# @author <a href="https://github.com/liyupi">程序员鱼皮</a>
+# @from <a href="https://yupi.icu">编程导航知识星球</a>
+server:
+  port: 8101
+spring:
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/valuesfriends
+    username: root
+    password: 200508
+  # Redis 配置（开发环境暂时注释）
+  # redis:
+  #   database: 1
+  #   host: localhost
+  #   port: 6379
+  #   timeout: 5000
+  #   password: 123456
+  # Elasticsearch 配置（开发环境暂时注释）
+  # elasticsearch:
+  #   uris: http://localhost:9200
+  #   username: root
+  #   password: 123456
+mybatis-plus:
+  configuration:
+    # 开发环境开启SQL日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+# 接口文档配置
+knife4j:
+  enable: true
+  openapi:
+    title: "接口文档 - 开发环境"
+    version: 1.0
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+          - com.yupi.springbootinit.controller
