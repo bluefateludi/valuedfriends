@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Select;
 
 /**
  * 匹配配置 Mapper
+ * 
  * @author yupi
  */
 @Mapper
@@ -15,6 +16,7 @@ public interface MatchConfigMapper extends BaseMapper<MatchConfig> {
 
     /**
      * 根据配置键获取配置值
+     * 
      * @param configKey 配置键
      * @return 配置值
      */
@@ -23,7 +25,8 @@ public interface MatchConfigMapper extends BaseMapper<MatchConfig> {
 
     /**
      * 根据配置键获取配置值，如果不存在则返回默认值
-     * @param configKey 配置键
+     * 
+     * @param configKey    配置键
      * @param defaultValue 默认值
      * @return 配置值
      */
@@ -34,7 +37,8 @@ public interface MatchConfigMapper extends BaseMapper<MatchConfig> {
 
     /**
      * 获取整型配置值
-     * @param configKey 配置键
+     * 
+     * @param configKey    配置键
      * @param defaultValue 默认值
      * @return 配置值
      */
@@ -52,7 +56,8 @@ public interface MatchConfigMapper extends BaseMapper<MatchConfig> {
 
     /**
      * 获取布尔型配置值
-     * @param configKey 配置键
+     * 
+     * @param configKey    配置键
      * @param defaultValue 默认值
      * @return 配置值
      */
@@ -66,7 +71,8 @@ public interface MatchConfigMapper extends BaseMapper<MatchConfig> {
 
     /**
      * 获取双精度配置值
-     * @param configKey 配置键
+     * 
+     * @param configKey    配置键
      * @param defaultValue 默认值
      * @return 配置值
      */

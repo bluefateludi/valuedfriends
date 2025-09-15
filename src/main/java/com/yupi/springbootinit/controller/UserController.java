@@ -205,38 +205,38 @@ public class UserController {
         if (userUpdateRequest == null || userUpdateRequest.getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "更新参数或用户ID不能为空");
         }
-        
+
         // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
         Long targetUserId = userUpdateRequest.getId();
-        
+
         // 权限验证：只有管理员可以更新其他用户信息，普通用户只能更新自己的信息
         boolean isAdmin = userService.isAdmin(loginUser);
         boolean isSelfUpdate = loginUser.getId().equals(targetUserId);
-        
+
         if (!isAdmin && !isSelfUpdate) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限更新其他用户信息");
         }
-        
+
         // 验证目标用户是否存在
         User existingUser = userService.getById(targetUserId);
         if (existingUser == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
         }
-        
+
         // 字段验证
         validateUpdateRequest(userUpdateRequest, isAdmin);
-        
+
         // 检查用户账号是否重复（如果要更新用户账号）
-        if (StringUtils.isNotBlank(userUpdateRequest.getUserAccount()) && 
-            !userUpdateRequest.getUserAccount().equals(existingUser.getUserAccount())) {
+        if (StringUtils.isNotBlank(userUpdateRequest.getUserAccount()) &&
+                !userUpdateRequest.getUserAccount().equals(existingUser.getUserAccount())) {
             validateUserAccountUnique(userUpdateRequest.getUserAccount(), targetUserId);
         }
-        
+
         // 构建更新对象
         User updateUser = new User();
         updateUser.setId(targetUserId);
-        
+
         // 只更新非空字段
         if (StringUtils.isNotBlank(userUpdateRequest.getUserAccount())) {
             updateUser.setUserAccount(userUpdateRequest.getUserAccount());
@@ -270,14 +270,14 @@ public class UserController {
             // 只有管理员可以修改用户角色
             updateUser.setUserRole(userUpdateRequest.getUserRole());
         }
-        
+
         // 执行更新
         boolean result = userService.updateById(updateUser);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新用户信息失败");
-        
+
         return ResultUtils.success(true);
     }
-    
+
     /**
      * 验证更新请求参数
      */
@@ -291,14 +291,14 @@ public class UserController {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号只能包含字母、数字和下划线");
             }
         }
-        
+
         // 验证用户昵称
         if (StringUtils.isNotBlank(request.getUsername())) {
             if (request.getUsername().length() > 50) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户昵称长度不能超过50位");
             }
         }
-        
+
         // 验证邮箱格式
         if (StringUtils.isNotBlank(request.getEmail())) {
             String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
@@ -306,7 +306,7 @@ public class UserController {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "邮箱格式不正确");
             }
         }
-        
+
         // 验证手机号格式
         if (StringUtils.isNotBlank(request.getPhone())) {
             String phoneRegex = "^1[3-9]\\d{9}$";
@@ -314,31 +314,31 @@ public class UserController {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号格式不正确");
             }
         }
-        
+
         // 验证性别
         if (request.getGender() != null) {
             if (request.getGender() < 0 || request.getGender() > 2) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "性别参数不正确");
             }
         }
-        
+
         // 验证用户角色（只有管理员可以修改）
         if (request.getUserRole() != null && !isAdmin) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限修改用户角色");
         }
-        
+
         if (request.getUserRole() != null) {
             if (request.getUserRole() < 0 || request.getUserRole() > 1) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户角色参数不正确");
             }
         }
-        
+
         // 验证用户状态（只有管理员可以修改）
         if (request.getUserStatus() != null && !isAdmin) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限修改用户状态");
         }
     }
-    
+
     /**
      * 验证用户账号唯一性
      */
@@ -463,17 +463,16 @@ public class UserController {
         if (batchMatchRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数不能为空");
         }
-        
+
         // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
-        
+
         // 调用匹配服务
         BatchMatchResponse response = matchService.batchMatchUsers(batchMatchRequest, loginUser);
-        
+
         return ResultUtils.success(response);
     }
 
     // endregion
-
 
 }

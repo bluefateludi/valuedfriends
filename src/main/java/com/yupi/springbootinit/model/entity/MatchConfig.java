@@ -8,9 +8,10 @@ import java.util.Date;
 
 /**
  * 匹配配置表
+ * 
  * @TableName match_config
  */
-@TableName(value ="match_config")
+@TableName(value = "match_config")
 @Data
 public class MatchConfig implements Serializable {
     /**

@@ -2,7 +2,7 @@
 -- 为匹配功能优化的索引
 
 -- 1. 用户状态和标签复合索引（用于快速筛选有效用户）
-CREATE INDEX idx_user_status_tags ON user (userStatus, tags(100));
+CREATE INDEX idx_user_status_tags ON user (userStatus, tags (100));
 
 -- 2. 创建时间索引（用于按时间排序和分页）
 CREATE INDEX idx_user_create_time ON user (createTime);
@@ -11,7 +11,7 @@ CREATE INDEX idx_user_create_time ON user (createTime);
 CREATE INDEX idx_user_status ON user (userStatus);
 
 -- 4. 标签字段索引（用于标签相关查询）
-CREATE INDEX idx_user_tags ON user (tags(200));
+CREATE INDEX idx_user_tags ON user (tags (200));
 
 -- 5. ID和状态复合索引（用于排除当前用户且筛选正常用户）
 CREATE INDEX idx_user_id_status ON user (id, userStatus);

@@ -1,3 +1,4 @@
+use valuesfriends ;
 -- 匹配配置表
 CREATE TABLE match_config (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',

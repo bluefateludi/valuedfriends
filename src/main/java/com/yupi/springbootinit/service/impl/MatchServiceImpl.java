@@ -8,6 +8,7 @@ import com.yupi.springbootinit.mapper.MatchConfigMapper;
 import com.yupi.springbootinit.mapper.UserMapper;
 import com.yupi.springbootinit.model.entity.User;
 import com.yupi.springbootinit.model.vo.*;
+import com.yupi.springbootinit.model.vo.UserVO;
 import com.yupi.springbootinit.service.MatchService;
 import com.yupi.springbootinit.service.UserRecommendService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,12 +20,13 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * 匹配服务实现类
+ * 
  * @author yupi
  */
 @Service
@@ -44,7 +46,7 @@ public class MatchServiceImpl implements MatchService {
     private RedisTemplate<String, Object> redisTemplate;
 
     @Resource
-    private ThreadPoolExecutor taskExecutor;
+    private Executor taskExecutor;
 
     private static final String BATCH_MATCH_CACHE_KEY = "batch_match:user:";
     private static final String ROTATION_OFFSET_KEY = "rotation_offset:user:";
@@ -57,7 +59,7 @@ public class MatchServiceImpl implements MatchService {
         if (loginUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
         }
-        
+
         // 如果请求中没有指定用户ID，使用当前登录用户ID
         if (request.getUserId() == null) {
             request.setUserId(loginUser.getId());
@@ -109,11 +111,11 @@ public class MatchServiceImpl implements MatchService {
 
         for (int batch = 0; batch < request.getMaxBatches(); batch++) {
             long batchStartTime = System.currentTimeMillis();
-            
+
             // 计算分页参数（带轮换）
             int offset = batch * request.getBatchSize() + rotationOffset;
             Page<User> page = new Page<>(offset / request.getBatchSize() + 1, request.getBatchSize());
-            
+
             // 查询候选用户
             QueryWrapper<User> queryWrapper = new QueryWrapper<>();
             queryWrapper.ne("id", request.getUserId())
@@ -121,27 +123,27 @@ public class MatchServiceImpl implements MatchService {
                     .ne("tags", "")
                     .ne("tags", "[]")
                     .eq("userStatus", 0);
-            
+
             Page<User> userPage = userMapper.selectPage(page, queryWrapper);
             List<User> candidates = userPage.getRecords();
-            
+
             dbQueryTime += System.currentTimeMillis() - batchStartTime;
-            
+
             if (CollectionUtils.isEmpty(candidates)) {
                 break;
             }
-            
+
             totalCandidates += candidates.size();
             actualBatches++;
-            
+
             // 并发计算相似度
             long calcStartTime = System.currentTimeMillis();
             List<UserRecommendVO> batchRecommendations = calculateSimilarityBatch(
                     targetUser, targetTags, candidates, request.getMinSimilarity());
             similarityCalcTime += System.currentTimeMillis() - calcStartTime;
-            
+
             allRecommendations.addAll(batchRecommendations);
-            
+
             // 如果已经找到足够的推荐用户，提前结束
             if (allRecommendations.size() >= request.getMaxRecommendations()) {
                 break;
@@ -150,7 +152,7 @@ public class MatchServiceImpl implements MatchService {
 
         // 排序并限制结果数量
         List<UserRecommendVO> finalRecommendations = allRecommendations.stream()
-                .sorted((a, b) -> Double.compare(b.getSimilarity(), a.getSimilarity()))
+                .sorted((a, b) -> Double.compare(b.getSimilarityScore(), a.getSimilarityScore()))
                 .limit(request.getMaxRecommendations())
                 .collect(Collectors.toList());
 
@@ -163,7 +165,7 @@ public class MatchServiceImpl implements MatchService {
         response.setFromCache(false);
         response.setAlgorithmVersion("v2.0-batch-jaccard");
         response.setTimestamp(System.currentTimeMillis());
-        
+
         // 计算下次轮换偏移量
         int nextOffset = (rotationOffset + getIntConfigValue("rotation_offset_increment", 5)) % 100;
         response.setNextRotationOffset(nextOffset);
@@ -209,40 +211,40 @@ public class MatchServiceImpl implements MatchService {
     /**
      * 并发计算相似度
      */
-    private List<UserRecommendVO> calculateSimilarityBatch(User targetUser, List<String> targetTags, 
-                                                           List<User> candidates, Double minSimilarity) {
+    private List<UserRecommendVO> calculateSimilarityBatch(User targetUser, List<String> targetTags,
+            List<User> candidates, Double minSimilarity) {
         List<CompletableFuture<UserRecommendVO>> futures = candidates.stream()
                 .map(candidate -> CompletableFuture.supplyAsync(() -> {
                     List<String> candidateTags = userRecommendService.parseUserTags(candidate.getTags());
                     if (CollectionUtils.isEmpty(candidateTags)) {
                         return null;
                     }
-                    
+
                     Double similarity = userRecommendService.calculateTagSimilarity(targetTags, candidateTags);
                     if (similarity < minSimilarity) {
                         return null;
                     }
-                    
+
+                    // 创建UserVO对象
+                    UserVO userVO = new UserVO();
+                    userVO.setId(candidate.getId());
+                    userVO.setUsername(candidate.getUsername());
+                    userVO.setAvatarUrl(candidate.getAvatarUrl());
+                    userVO.setUserRole(candidate.getUserRole());
+                    userVO.setTags(candidate.getTags());
+                    userVO.setCreateTime(candidate.getCreateTime());
+
+                    // 创建UserRecommendVO对象
                     UserRecommendVO vo = new UserRecommendVO();
-                    vo.setId(candidate.getId());
-                    vo.setUsername(candidate.getUsername());
-                    vo.setUserAccount(candidate.getUserAccount());
-                    vo.setAvatarUrl(candidate.getAvatarUrl());
-                    vo.setGender(candidate.getGender());
-                    vo.setPhone(candidate.getPhone());
-                    vo.setEmail(candidate.getEmail());
-                    vo.setUserStatus(candidate.getUserStatus());
-                    vo.setCreateTime(candidate.getCreateTime());
-                    vo.setUserRole(candidate.getUserRole());
-                    vo.setPlanetCode(candidate.getPlanetCode());
-                    vo.setTags(candidateTags);
-                    vo.setSimilarity(similarity);
+                    vo.setUser(userVO);
+                    vo.setSimilarityScore(similarity);
                     vo.setMatchedTags(userRecommendService.getMatchedTags(targetTags, candidateTags));
-                    
+                    vo.setRecommendReason("基于标签相似度匹配，相似度: " + String.format("%.2f", similarity));
+
                     return vo;
                 }, taskExecutor))
                 .collect(Collectors.toList());
-        
+
         return futures.stream()
                 .map(CompletableFuture::join)
                 .filter(Objects::nonNull)
@@ -358,7 +360,7 @@ public class MatchServiceImpl implements MatchService {
                 BatchMatchRequest request = new BatchMatchRequest();
                 request.setUserId(userId);
                 request.setEnableCache(true);
-                batchMatchUsers(request);
+                batchMatchUsers(request, null);
                 log.info("预热用户 {} 的匹配缓存完成", userId);
             } catch (Exception e) {
                 log.warn("预热用户匹配缓存失败: {}", e.getMessage());
