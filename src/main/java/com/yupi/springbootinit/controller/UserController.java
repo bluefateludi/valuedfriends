@@ -43,6 +43,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.yupi.springbootinit.service.impl.UserServiceImpl.SALT;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 /**
  * 用户接口
@@ -53,6 +56,7 @@ import static com.yupi.springbootinit.service.impl.UserServiceImpl.SALT;
 @RestController
 @RequestMapping("/user")
 @Slf4j
+@Api(tags = "用户管理接口")
 public class UserController {
 
     @Resource
@@ -458,7 +462,9 @@ public class UserController {
      * @throws BusinessException 当参数无效或用户未登录时抛出
      */
     @PostMapping("/match/batch")
-    public BaseResponse<BatchMatchResponse> batchMatchUsers(@Valid @RequestBody BatchMatchRequest batchMatchRequest,
+    @ApiOperation(value = "分批匹配用户", notes = "根据用户标签进行分批匹配，支持自定义批次大小和相似度阈值")
+    public BaseResponse<BatchMatchResponse> batchMatchUsers(
+            @ApiParam(value = "分批匹配请求参数", required = true) @Valid @RequestBody BatchMatchRequest batchMatchRequest,
             HttpServletRequest request) {
         if (batchMatchRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数不能为空");
