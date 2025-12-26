@@ -50,7 +50,7 @@ public class AuthInterceptor {
             return joinPoint.proceed();
         }
         // 必须有该权限才通过
-        // 将Integer类型的userRole转换为String类型
+        // 将Integer类型的userRole转换为String类型docker run -d --name valuedfriends-app -p 8101:8101 valuedfriends:latest
         String userRoleStr = loginUser.getUserRole() != null ? loginUser.getUserRole().toString() : null;
         UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(userRoleStr);
 

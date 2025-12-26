@@ -23,6 +23,7 @@ import com.yupi.springbootinit.service.UserService;
 import com.yupi.springbootinit.service.MatchService;
 import com.yupi.springbootinit.model.vo.BatchMatchRequest;
 import com.yupi.springbootinit.model.vo.BatchMatchResponse;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import javax.annotation.Resource;
@@ -35,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -382,16 +384,28 @@ public class UserController {
     /**
      * 根据ID获取用户脱敏信息
      * 
-     * @param id      用户ID，必须大于0
+     * @param idStr   用户ID字符串
      * @param request HTTP请求对象
      * @return 用户脱敏信息
      * @throws BusinessException 当用户ID无效或用户不存在时抛出
      */
     @GetMapping("/get/vo")
-    public BaseResponse<UserVO> getUserVOById(long id, HttpServletRequest request) {
+    public BaseResponse<UserVO> getUserVOById(@RequestParam("id") String idStr, HttpServletRequest request) {
+        if (StringUtils.isBlank(idStr)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID不能为空");
+        }
+        
+        long id;
+        try {
+            id = Long.parseLong(idStr.trim());
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID格式不正确");
+        }
+        
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID必须大于0");
         }
+        
         User user = userService.getById(id);
         ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
         return ResultUtils.success(userService.getUserVO(user));

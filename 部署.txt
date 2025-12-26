@@ -1,0 +1,10 @@
+数据库密码：@Value1234
+端口为：80
+
+Redis配置：
+- 服务状态：已安装并运行 ✅
+- 监听地址：127.0.0.1:6379
+- 数据库：database 1
+- 密码：暂未设置（建议生产环境设置密码）
+- 配置文件：/etc/redis/redis.conf
+- 服务管理：systemctl start/stop/restart redis-server
